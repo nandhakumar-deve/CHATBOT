@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🎬 Movie Recommender Bot</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #141e30, #243b55);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 50px 20px;
+      margin: 0;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      color: #00ffd0;
+      text-shadow: 2px 2px #000;
+    }
+
+    #chat {
+      width: 100%;
+      max-width: 700px;
+      background: #2b2b3d;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0, 255, 208, 0.2);
+      overflow-y: auto;
+      max-height: 400px;
+    }
+
+    .message {
+      margin: 10px 0;
+      padding: 10px 15px;
+      border-radius: 12px;
+      line-height: 1.4;
+    }
+
+    .user {
+      background: #4e4e60;
+      text-align: right;
+      margin-left: auto;
+      width: fit-content;
+      max-width: 90%;
+    }
+
+    .bot {
+      background: #00ffd0;
+      color: #000;
+      text-align: left;
+      margin-right: auto;
+      width: fit-content;
+      max-width: 90%;
+      white-space: pre-wrap;
+    }
+
+    #inputArea {
+      margin-top: 20px;
+      width: 100%;
+      max-width: 700px;
+      display: flex;
+      gap: 10px;
+    }
+
+    #userInput {
+      flex: 1;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 12px 20px;
+      background: #00ffd0;
+      color: #000;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #00e6b8;
+    }
+
+    #actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .quick-btn {
+      background: #3e3e5e;
+      color: #00ffd0;
+      border: 1px solid #00ffd0;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .quick-btn:hover {
+      background: #00ffd0;
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎬 Movie Recommender Bot</h1>
+
+  <div id="chat">
+    <div class="message bot">Hi! Tell me your mood or favorite genre!</div>
+  </div>
+
+  <div id="inputArea">
+    <input id="userInput" type="text" placeholder="e.g. I feel like watching comedy..." />
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <div id="actions">
+    <button class="quick-btn" onclick="quickSend('surprise me')">🎉 Surprise Me</button>
+    <button class="quick-btn" onclick="quickSend('comedy')">😂 Comedy</button>
+    <button class="quick-btn" onclick="quickSend('sci-fi')">🚀 Sci-Fi</button>
+    <button class="quick-btn" onclick="clearHistory()">🧹 Clear History</button>
+  </div>
+
+  <script>
+    async function sendMessage() {
+      const inputField = document.getElementById("userInput");
+      const input = inputField.value.trim();
+      const chat = document.getElementById("chat");
+      if (!input) return;
+
+      chat.innerHTML += `<div class="message user">${input}</div>`;
+      inputField.value = "";
+
+      // Send input to FastAPI backend using POST request
+      const res = await fetch("http://127.0.0.1:8000/recommend", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ message: input })
+      });
+
+      const data = await res.json();
+      chat.innerHTML += `<div class="message bot">${data.response}</div>`;
+
+      // Scroll to the bottom of the chat
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function quickSend(text) {
+      document.getElementById("userInput").value = text;
+      sendMessage();
+    }
+
+    async function clearHistory() {
+      const res = await fetch("http://127.0.0.1:8000/clear", {
+        method: "POST"
+      });
+      const data = await res.json();
+      document.getElementById("chat").innerHTML += `<div class="message bot">${data.response}</div>`;
+    }
+  </script>
+</body>
+</html>
